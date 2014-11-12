@@ -27,6 +27,8 @@ char font_file[128] = "resources/beyourself.ttf";
 TTF_Font *font = NULL;
 SDL_Color font_color = { 255, 255, 255 };
 int font_size = 24;
+TTF_Font *input_font = NULL;
+int input_font_size = 64;
 
 SDL_Event event;
 
@@ -57,6 +59,8 @@ int espeak_thread(void *data) {
 }
 
 void input_init() {
+  input_font = TTF_OpenFont(font_file, input_font_size);
+
   strncpy(input_str, "", sizeof(input_str));
   input_text = NULL;
   SDL_EnableUNICODE(SDL_ENABLE);
@@ -78,20 +82,16 @@ int init() {
     return FALSE;
   }
 
+  font = TTF_OpenFont(font_file, font_size);
+  if (font == NULL) {
+    return FALSE;
+  }
+
   SDL_WM_SetCaption(window_title_str, NULL);
 
   input_init();
 
   thread1 = SDL_CreateThread(espeak_thread, NULL);
-
-  return TRUE;
-}
-
-int load_files() {
-  font = TTF_OpenFont(font_file, font_size);
-  if (font == NULL) {
-    return FALSE;
-  }
 
   return TRUE;
 }
@@ -105,6 +105,7 @@ int set_footer_message() {
 }
 
 void input_clean_up() {
+  TTF_CloseFont(input_font);
   SDL_FreeSurface(input_text);
   SDL_EnableUNICODE(SDL_DISABLE);
 }
@@ -172,15 +173,13 @@ void handle_input() {
     if (strcmp(temp, input_str) != 0 ) {
       SDL_FreeSurface(input_text);
       strncpy(input_str, temp, sizeof(input_str));
-      input_text = TTF_RenderText_Solid(font, input_str, font_color);
+      input_text = TTF_RenderText_Solid(input_font, input_str, font_color);
     }
   }
 }
 
 int main(int argc, char* args[]) {
   if (init() == FALSE)
-    return 1;
-  if (load_files() == FALSE)
     return 1;
   if (set_footer_message() == FALSE)
     return 1;
