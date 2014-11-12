@@ -47,10 +47,10 @@ int espeak_thread(void *data) {
       strcat(espeak_command, textlist_get_current());
       strcat(espeak_command, "\" 2>/dev/null");
       system(espeak_command);
-      printf("speech_command = %s\n", espeak_command);
+      SDL_Delay(500);
+    } else {
+      SDL_Delay(1);
     }
-
-    SDL_Delay(500);
   }
 
   return 0;
@@ -181,8 +181,10 @@ int main(int argc, char* args[]) {
   // textlist tests
   textlist_load();
   textlist_set_random_pos();
+
+  SDL_SemWait(espeak_lock);
   use_espeak_thread = TRUE;
-  //textlist_remove_current();
+  SDL_SemPost(espeak_lock);
 
   Uint32 frameStart = 0;
   while (quit == FALSE) {
@@ -191,6 +193,23 @@ int main(int argc, char* args[]) {
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_RETURN) {
         printf("text entered\n");
+        if (textlist_current_compare(input_str) == 0) {
+          printf("match\n");
+          SDL_SemWait(espeak_lock);
+          use_espeak_thread = FALSE;
+          SDL_SemPost(espeak_lock);
+
+          textlist_remove_current();
+          textlist_set_random_pos();
+          input_init();
+
+          SDL_SemWait(espeak_lock);
+          use_espeak_thread = TRUE;
+          SDL_SemPost(espeak_lock);
+
+        } else {
+          printf("no match\n");
+        }
       } else {
         handle_input();
       }

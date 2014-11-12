@@ -12,6 +12,7 @@ struct st_textlist {
 int textlist_length;
 
 int textlist_current = -1;
+int textlist_chars_counter = 0;
 
 int textlist_strlen_utf8(char *s) {
   int i = 0, j = 0;
@@ -55,8 +56,12 @@ char *textlist_get_current() {
     return "";
 }
 
+int textlist_current_compare(char *text) {
+  return strcmp(textlist[textlist_current].text, text);
+}
+
 void textlist_remove_current() {
-  strcpy(textlist[textlist_current].text, "");
+  textlist_chars_counter += textlist[textlist_current].text_len;
   int i;
   for (i = textlist_current; i < textlist_length - 1; i++) {
     textlist[i] = textlist[i+1];
