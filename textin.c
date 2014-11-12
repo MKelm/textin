@@ -1,10 +1,13 @@
 #include "global.h"
 #include "textlist.h"
+#include "SDL/SDL_thread.h"
 
 #define FALSE 0
 #define TRUE 1
 
 #define FPS 15
+
+int quit = FALSE;
 
 SDL_Surface *screen;
 SDL_Surface *footer_message;
@@ -26,6 +29,32 @@ SDL_Color font_color = { 255, 255, 255 };
 int font_size = 24;
 
 SDL_Event event;
+
+SDL_Thread *thread1 = NULL;
+int use_espeak_thread = FALSE;
+SDL_sem *espeak_lock = NULL;
+
+int espeak_thread(void *data) {
+  int local_use_espeak = FALSE;
+  while (quit == FALSE) {
+
+    SDL_SemWait(espeak_lock);
+    local_use_espeak = use_espeak_thread;
+    SDL_SemPost(espeak_lock);
+
+    if (local_use_espeak == TRUE) {
+      char espeak_command[256] = "espeak -v mb/mb-de4 -s 90 \"";
+      strcat(espeak_command, textlist_get_current());
+      strcat(espeak_command, "\" 2>/dev/null");
+      system(espeak_command);
+      printf("speech_command = %s\n", espeak_command);
+    }
+
+    SDL_Delay(500);
+  }
+
+  return 0;
+}
 
 void input_init() {
   strncpy(input_str, "", sizeof(input_str));
@@ -53,6 +82,8 @@ int init() {
 
   input_init();
 
+  thread1 = SDL_CreateThread(espeak_thread, NULL);
+
   return TRUE;
 }
 
@@ -79,6 +110,9 @@ void input_clean_up() {
 }
 
 void clean_up() {
+  SDL_WaitThread(thread1, NULL);
+  SDL_DestroySemaphore(espeak_lock);
+
   input_clean_up();
 
   SDL_FreeSurface(footer_message);
@@ -146,17 +180,11 @@ int main(int argc, char* args[]) {
 
   // textlist tests
   textlist_load();
-
   textlist_set_random_pos();
-  char espeak_command[256] = "espeak -v mb/mb-de4 -s 90 \"";
-  strcat(espeak_command, textlist_get_current());
-  strcat(espeak_command, "\" 2>/dev/null");
-  //system(espeak_command);
-  printf("speech_command = %s\n", espeak_command);
-  textlist_remove_current();
+  use_espeak_thread = TRUE;
+  //textlist_remove_current();
 
   Uint32 frameStart = 0;
-  int quit = FALSE;
   while (quit == FALSE) {
     frameStart = SDL_GetTicks();
 
