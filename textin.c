@@ -147,13 +147,20 @@ void handle_input() {
     sprintf(temp, "%s", input_str);
 
     if (input_str_len < 256) {
-      if (event.key.keysym.sym != SDLK_RETURN &&
-          event.key.keysym.sym != SDLK_BACKSPACE) {
+      printf("%d\n", event.key.keysym.unicode);
+      if (event.key.keysym.unicode == (Uint16)' ' ||
+          (event.key.keysym.unicode >= (Uint16)'a' &&
+           event.key.keysym.unicode <= (Uint16)'z') ||
+          event.key.keysym.unicode == 223 || // ß
+          event.key.keysym.unicode == 252 || // ü
+          event.key.keysym.unicode == 228 || // ä
+          event.key.keysym.unicode == 246) { // ö
         sprintf(temp, "%s%c", temp, event.key.keysym.unicode);
         input_str_len++;
       }
     }
     if (event.key.keysym.sym == SDLK_BACKSPACE && input_str_len > 0) {
+      printf("input len %d\n", input_str_len);
       input_str_len--;
       char temp2[256];
       strncpy(temp2, "", sizeof(temp2));

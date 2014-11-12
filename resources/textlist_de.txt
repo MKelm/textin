@@ -28,7 +28,6 @@ asphalt
 orientierung
 wand
 sendung
-orient
 morgen
 süden
 osten
