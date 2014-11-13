@@ -46,6 +46,7 @@ void output_scores() {
       scorelist_get_score_string(i, TRUE)
     );
   }
+  scorelist_save();
 }
 
 int main() {
@@ -53,6 +54,8 @@ int main() {
 
   textlist_init();
   textlist_set_random_pos();
+
+  scorelist_load();
 
   espeak_init();
 
