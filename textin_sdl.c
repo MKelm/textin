@@ -136,17 +136,18 @@ void handle_input() {
           event.key.keysym.unicode == 252 || // ü
           event.key.keysym.unicode == 228 || // ä
           event.key.keysym.unicode == 246) { // ö
+
         wchar_t wc = event.key.keysym.unicode;
         wchar_t t_char[sizeof(wchar_t)];
         swprintf(t_char, sizeof(wchar_t), L"%lc", wc);
         wcscat(input_str, t_char);
-        input_str_len++;
+        input_str_len = wcslen(input_str);
         input_change = TRUE;
       }
     }
     if (event.key.keysym.sym == SDLK_BACKSPACE && input_str_len > 0) {
-      input_str_len--;
-      memmove(input_str, input_str, input_str_len);
+      input_str_len = wcslen(input_str) - 1;
+      wcsncpy(input_str, input_str, input_str_len);
       wprintf(L"new input len %d with str %ls\n", input_str_len, input_str);
       input_change = TRUE;
     }
