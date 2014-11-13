@@ -125,4 +125,7 @@ void scorelist_load() {
     fclose(fp);
     scorelist_length = i;
   }
+
+  free(ptr);
+  free(token);
 }
