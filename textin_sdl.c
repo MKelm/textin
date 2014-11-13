@@ -125,10 +125,8 @@ void input_show_centered() {
 
 
 void handle_input() {
-  if(event.type == SDL_KEYDOWN) {
-    wchar_t temp[256];
-    wchar_t t_char[4];
-    swprintf(temp, 256, L"%ls", input_str);
+  if (event.type == SDL_KEYDOWN) {
+    int input_change = FALSE;
 
     if (input_str_len < 256) {
       if (event.key.keysym.unicode == (Uint16)' ' ||
@@ -138,27 +136,25 @@ void handle_input() {
           event.key.keysym.unicode == 252 || // ü
           event.key.keysym.unicode == 228 || // ä
           event.key.keysym.unicode == 246) { // ö
-        swprintf(t_char, 4, L"%c", event.key.keysym.unicode);
-        wcscat(temp, t_char);
-        input_str_len = wcslen(temp);
+        wchar_t wc = event.key.keysym.unicode;
+        wchar_t t_char[sizeof(wchar_t)];
+        swprintf(t_char, sizeof(wchar_t), L"%lc", wc);
+        wcscat(input_str, t_char);
+        input_str_len++;
+        input_change = TRUE;
       }
     }
     if (event.key.keysym.sym == SDLK_BACKSPACE && input_str_len > 0) {
-      wprintf(L"input len %d\n", input_str_len);
       input_str_len--;
-      wchar_t temp2[256];
-      if (input_str_len > 0)
-        wcsncpy(temp2, temp, input_str_len);
-      else
-        wcsncpy(temp2, L"", wcslen(temp2));
-      wcsncpy(temp, temp2, wcslen(temp2));
+      memmove(input_str, input_str, input_str_len);
+      wprintf(L"new input len %d with str %ls\n", input_str_len, input_str);
+      input_change = TRUE;
     }
-    if (wcscmp(temp, input_str) != 0) {
+    if (input_change == TRUE) {
       wprintf(L"input change\n");
       SDL_FreeSurface(input_text);
-      wcsncpy(input_str, temp, wcslen(temp));
-      char t_input_str[256];
-      wcstombs(t_input_str, input_str, 256);
+      char t_input_str[256] = "";
+      wcstombs(t_input_str, input_str, input_str_len);
       input_text = TTF_RenderText_Solid(input_font, t_input_str, font_color);
     }
   }
