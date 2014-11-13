@@ -1,6 +1,5 @@
 #include "global.h"
 #include "textlist.h"
-#include "SDL/SDL_thread.h"
 
 #define FALSE 0
 #define TRUE 1

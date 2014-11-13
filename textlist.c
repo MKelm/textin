@@ -5,14 +5,14 @@
 #define TEXTLIST_MAX_LENGTH 1024
 
 struct st_textlist {
-  char text[128];
-  int text_len;
+  wchar_t text[128];
+  size_t text_len;
   int used;
 } textlist[TEXTLIST_MAX_LENGTH];
 int textlist_length;
 
 int textlist_current = -1;
-int textlist_chars_counter = 0;
+size_t textlist_chars_counter = 0;
 
 int textlist_strlen_utf8(char *s) {
   int i = 0, j = 0;
@@ -30,12 +30,14 @@ void textlist_load() {
   int i = 0;
   fp = fopen("resources/textlist_de.txt", "r");
   if (fp != NULL) {
-    char chunk[1024];
-    while (fgets(chunk, 1024, fp) != NULL) {
-      strtok(chunk, "\n");
-      if (strlen(chunk) > 0) {
-        strcpy(textlist[i].text, chunk);
-        textlist[i].text_len = textlist_strlen_utf8(chunk);
+    wchar_t chunk[1024];
+    while (fgetws(chunk, 1024, fp) != NULL) {
+      //strtok(chunk, "\n");
+      chunk[wcslen(chunk) - 1] = L'\0';
+
+      if (wcslen(chunk) > 0) {
+        wcscpy(textlist[i].text, chunk);
+        textlist[i].text_len = wcslen(chunk);
         textlist[i].used = 0;
         i++;
       }
@@ -49,15 +51,15 @@ void textlist_set_random_pos() {
   textlist_current = rand() % textlist_length;
 }
 
-char *textlist_get_current() {
+wchar_t *textlist_get_current() {
   if (textlist_current > -1)
     return textlist[textlist_current].text;
   else
-    return "";
+    return L"";
 }
 
-int textlist_current_compare(char *text) {
-  return strcmp(textlist[textlist_current].text, text);
+int textlist_current_compare(wchar_t *text) {
+  return wcscmp(textlist[textlist_current].text, text);
 }
 
 void textlist_remove_current() {
