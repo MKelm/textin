@@ -11,7 +11,7 @@ struct st_textlist {
 int textlist_length;
 
 int textlist_current = -1;
-size_t textlist_chars_counter = 0;
+unsigned int textlist_chars_count = 0;
 
 void textlist_load() {
   srand(time(NULL));
@@ -55,11 +55,15 @@ int textlist_current_compare(wchar_t *text) {
 }
 
 void textlist_remove_current() {
-  textlist_chars_counter += textlist[textlist_current].text_len;
+  textlist_chars_count += (unsigned int)textlist[textlist_current].text_len;
   int i;
   for (i = textlist_current; i < textlist_length - 1; i++) {
     textlist[i] = textlist[i+1];
   }
   textlist_length--;
   textlist_current = -1;
+}
+
+unsigned int textlist_get_chars_count() {
+  return textlist_chars_count;
 }

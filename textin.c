@@ -2,9 +2,10 @@
 #include "textlist.h"
 #include "timer.h"
 #include "espeak.h"
+#include "scorelist.h"
 
 int quit = FALSE;
-int max_inputs = 30;
+int max_inputs = 5;
 int inputs_count = 0;
 
 wchar_t input_str[256];
@@ -31,7 +32,7 @@ int main() {
     if (wcscmp(input_str, L"ende") == 0) {
       quit = TRUE;
     } else if (textlist_current_compare(input_str) == 0) {
-      wprintf(L"--> Eingabe %d richtig\n", inputs_count + 1);
+      wprintf(L"--> %d. Eingabe richtig\n", inputs_count + 1);
       inputs_count++;
 
       if (inputs_count == max_inputs) {
@@ -51,6 +52,15 @@ int main() {
     timer_update();
     wprintf(L"--> Zeit: %u Sekunden\n", timer_get_seconds());
   }
+
+
+  wchar_t name[256];
+  wprintf(L"--> Name: ");
+  fgetws(name, 255, stdin);
+  name[wcslen(name) - 1] = L'\0';
+  scorelist_show_score(
+    scorelist_add_score(name, textlist_get_chars_count(), timer_get_seconds())
+  );
 
   espeak_clean_up();
 
