@@ -1,5 +1,6 @@
 #include "global.h"
 #include "textlist.h"
+#include "timer.h"
 
 int quit = FALSE;
 int run_espeak = FALSE;
@@ -50,6 +51,7 @@ int main() {
   espeak_lock = SDL_CreateMutex();
   thread1 = SDL_CreateThread(espeak_thread, NULL);
 
+  timer_start();
   while (quit == FALSE) {
     SDL_mutexP(espeak_lock);
     run_espeak = TRUE;
@@ -60,7 +62,7 @@ int main() {
     if (wcscmp(input_str, L"ende") == 0) {
       quit = TRUE;
     } else if (textlist_current_compare(input_str) == 0) {
-      wprintf(L"--> richtig\n");
+      wprintf(L"--> Eingabe richtig\n");
 
       SDL_mutexP(espeak_lock);
       textlist_remove_current();
@@ -71,8 +73,10 @@ int main() {
         input_init();
       }
     } else {
-      wprintf(L"--> falsch\n");
+      wprintf(L"--> Eingabe falsch\n");
     }
+    timer_update();
+    wprintf(L"--> Zeit: %u Sekunden\n", timer_get_seconds());
   }
 
   SDL_WaitThread(thread1, NULL);

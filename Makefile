@@ -4,10 +4,10 @@ CC = gcc
 CFLAGS = -Wall -ggdb
 LDFLAGS = -lSDL -lSDL_image -lSDL_gfx -lSDL_ttf
 
-textin : textin.o textlist.o
-	$(CC) textin.o textlist.o -o textin.$(ARCH) $(LDFLAGS)
+textin : textin.o textlist.o timer.o
+	$(CC) textin.o textlist.o timer.o -o textin.$(ARCH) $(LDFLAGS)
 
-textin.o : textin.c textlist.h global.h
+textin.o : textin.c textlist.h timer.h global.h
 	$(CC) $(CFLAGS) -c textin.c
 
 textin_sdl : textin_sdl.o textlist.o
@@ -18,6 +18,9 @@ textin_sdl.o : textin_sdl.c textlist.h global.h
 
 textlist.o : textlist.c textlist.h global.h
 	$(CC) $(CFLAGS) -c textlist.c
+
+timer.o : timer.c timer.h global.h
+	$(CC) $(CFLAGS) -c timer.c
 
 clean :
 	$(RM) *.o
