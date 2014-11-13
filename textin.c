@@ -42,7 +42,7 @@ void input_init() {
 }
 
 int main() {
-  setlocale(LC_ALL, NULL);
+  setlocale(LC_ALL, "de_DE.UTF-8");
 
   textlist_load();
   textlist_set_random_pos();

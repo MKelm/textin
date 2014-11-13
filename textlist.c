@@ -19,12 +19,11 @@ void textlist_load() {
 
   FILE *fp;
   int i = 0;
-  fp = fopen("resources/textlist_de.txt", "r");
+  fp = fopen("resources/textlist_de.txt", "r, ccs=UTF-8");
   if (fp != NULL) {
     wchar_t chunk[1024];
     while (fgetws(chunk, 1024, fp) != NULL) {
       chunk[wcslen(chunk) - 1] = L'\0';
-
       if (wcslen(chunk) > 0) {
         wcscpy(textlist[i].text, chunk);
         textlist[i].text_len = wcslen(chunk);
