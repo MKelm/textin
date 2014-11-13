@@ -11,8 +11,14 @@ int inputs_count = 0;
 wchar_t input_str[256];
 size_t input_str_len = 0;
 
-void input_init() {
-  wcscpy(input_str, L"");
+void input_name() {
+  wchar_t name[256];
+  wprintf(L"--> Name: ");
+  fgetws(name, 255, stdin);
+  name[wcslen(name) - 1] = L'\0';
+  scorelist_show_score(
+    scorelist_add_score(name, textlist_get_chars_count(), timer_get_seconds())
+  );
 }
 
 int main() {
@@ -29,6 +35,8 @@ int main() {
 
     fgetws(input_str, 255, stdin);
     input_str[wcslen(input_str) - 1] = L'\0';
+    timer_update();
+
     if (wcscmp(input_str, L"ende") == 0) {
       quit = TRUE;
     } else if (textlist_current_compare(input_str) == 0) {
@@ -37,30 +45,21 @@ int main() {
 
       if (inputs_count == max_inputs) {
         quit = TRUE;
+        input_name();
+
       } else {
         espeak_lock();
         textlist_remove_current();
         quit = (textlist_set_random_pos() == TRUE) ? FALSE : TRUE;
         espeak_unlock();
       }
-      if (quit == FALSE) {
-        input_init();
-      }
     } else {
       wprintf(L"--> Eingabe falsch\n");
     }
-    timer_update();
-    wprintf(L"--> Zeit: %u Sekunden\n", timer_get_seconds());
+    if (quit == FALSE) {
+      wprintf(L"--> Zeit: %u Sekunden\n", timer_get_seconds());
+    }
   }
-
-
-  wchar_t name[256];
-  wprintf(L"--> Name: ");
-  fgetws(name, 255, stdin);
-  name[wcslen(name) - 1] = L'\0';
-  scorelist_show_score(
-    scorelist_add_score(name, textlist_get_chars_count(), timer_get_seconds())
-  );
 
   espeak_clean_up();
 
