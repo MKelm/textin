@@ -5,7 +5,7 @@
 #include "scorelist.h"
 
 int quit = FALSE;
-int max_inputs = 5;
+int max_inputs = 10;
 int inputs_count = 0;
 
 wchar_t input_str[256];
@@ -20,7 +20,8 @@ void input_name() {
   wprintf(
     L"--> %ls\n",
     scorelist_get_score_string(
-      scorelist_add_score(name, textlist_get_chars_count(), timer_get_seconds())
+      scorelist_add_score(name, textlist_get_chars_count(), timer_get_seconds()),
+      FALSE
     )
   );
 }
@@ -34,6 +35,17 @@ int input_continue() {
     return TRUE;
   }
   return FALSE;
+}
+
+void output_scores() {
+  int i, list_length = scorelist_get_length();
+  wprintf(L"\n--> Punkteliste\n");
+  for (i = 0; i < list_length; i++) {
+    wprintf(
+      L"--> %ls\n",
+      scorelist_get_score_string(i, TRUE)
+    );
+  }
 }
 
 int main() {
@@ -60,6 +72,10 @@ int main() {
       inputs_count++;
       wprintf(L"--> Zeit: %u Sekunden\n", timer_get_seconds());
 
+      espeak_lock();
+      textlist_remove_current();
+      espeak_unlock();
+
       if (inputs_count == max_inputs) {
         input_name();
         if (input_continue() == FALSE) {
@@ -73,7 +89,6 @@ int main() {
       }
       if (quit == FALSE) {
         espeak_lock();
-        textlist_remove_current();
         quit = (textlist_set_random_pos() == TRUE) ? FALSE : TRUE;
         espeak_unlock();
       }
@@ -81,6 +96,8 @@ int main() {
       wprintf(L"--> Eingabe falsch\n");
     }
   }
+
+  output_scores();
 
   espeak_clean_up();
 
