@@ -25,10 +25,21 @@ void input_name() {
   );
 }
 
+int input_continue() {
+  wchar_t continue_str[256];
+  wprintf(L"\n--> Weiter? (j/n) ");
+  fgetws(continue_str, 255, stdin);
+  continue_str[wcslen(continue_str) - 1] = L'\0';
+  if (wcscmp(continue_str, L"j") == 0) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
 int main() {
   setlocale(LC_ALL, "de_DE.UTF-8");
 
-  textlist_load();
+  textlist_init();
   textlist_set_random_pos();
 
   espeak_init();
@@ -50,10 +61,17 @@ int main() {
       wprintf(L"--> Zeit: %u Sekunden\n", timer_get_seconds());
 
       if (inputs_count == max_inputs) {
-        quit = TRUE;
         input_name();
-
-      } else {
+        if (input_continue() == FALSE) {
+          quit = TRUE;
+        } else {
+          textlist_init();
+          textlist_set_random_pos();
+          timer_start();
+          inputs_count = 0;
+        }
+      }
+      if (quit == FALSE) {
         espeak_lock();
         textlist_remove_current();
         quit = (textlist_set_random_pos() == TRUE) ? FALSE : TRUE;

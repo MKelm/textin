@@ -8,12 +8,12 @@ struct st_textlist {
   wchar_t text[128];
   size_t text_len;
 } textlist[TEXTLIST_MAX_LENGTH];
+
 int textlist_length;
+int textlist_current;
+unsigned int textlist_chars_count;
 
-int textlist_current = -1;
-unsigned int textlist_chars_count = 0;
-
-void textlist_load() {
+void textlist_init() {
   srand(time(NULL));
 
   FILE *fp;
@@ -31,7 +31,10 @@ void textlist_load() {
     }
     fclose(fp);
   }
+
   textlist_length = i;
+  textlist_current = -1;
+  textlist_chars_count = 0;
 }
 
 int textlist_set_random_pos() {

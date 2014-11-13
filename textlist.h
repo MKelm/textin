@@ -1,4 +1,4 @@
-void textlist_load();
+void textlist_init();
 int textlist_set_random_pos();
 size_t textlist_get_current_text_len();
 wchar_t *textlist_get_current();
