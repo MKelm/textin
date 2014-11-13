@@ -32,7 +32,6 @@ void textlist_load() {
   if (fp != NULL) {
     wchar_t chunk[1024];
     while (fgetws(chunk, 1024, fp) != NULL) {
-      //strtok(chunk, "\n");
       chunk[wcslen(chunk) - 1] = L'\0';
 
       if (wcslen(chunk) > 0) {

@@ -37,9 +37,12 @@ int espeak_thread(void *data) {
   return 0;
 }
 
+void input_init() {
+  wcscpy(input_str, L"");
+}
+
 int main() {
   setlocale(LC_ALL, NULL);
-  wcscpy(input_str, L"");
 
   textlist_load();
   textlist_set_random_pos();
@@ -48,7 +51,28 @@ int main() {
   thread1 = SDL_CreateThread(espeak_thread, NULL);
 
   while (quit == FALSE) {
-    // todo input / output logic
+
+    fgetws(input_str, 255, stdin);
+    input_str[wcslen(input_str) - 1] = L'\0';
+    if (wcscmp(input_str, L"ende") == 0) {
+      quit = TRUE;
+    } else if (textlist_current_compare(input_str) == 0) {
+      wprintf(L"richtig\n");
+      SDL_SemWait(espeak_lock);
+      use_espeak_thread = FALSE;
+      SDL_SemPost(espeak_lock);
+
+      textlist_remove_current();
+      textlist_set_random_pos();
+      input_init();
+
+      SDL_SemWait(espeak_lock);
+      use_espeak_thread = TRUE;
+      SDL_SemPost(espeak_lock);
+    } else {
+      wprintf(L"falsch\n");
+    }
+
     SDL_Delay(1);
   }
 
