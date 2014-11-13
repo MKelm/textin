@@ -1,5 +1,8 @@
 #include "global.h"
 #include "textlist.h"
+#include "timer.h"
+#include "espeak.h"
+#include "scorelist.h"
 
 #define FALSE 0
 #define TRUE 1
@@ -12,7 +15,7 @@ SDL_Surface *screen;
 SDL_Surface *footer_message;
 SDL_Surface *input_text;
 
-char input_str[256];
+wchar_t *input_str;
 int input_str_len = 0;
 
 int screen_width = 800;
@@ -31,36 +34,10 @@ int input_font_size = 64;
 
 SDL_Event event;
 
-SDL_Thread *thread1 = NULL;
-int use_espeak_thread = FALSE;
-SDL_sem *espeak_lock = NULL;
-
-int espeak_thread(void *data) {
-  int local_use_espeak = FALSE;
-  while (quit == FALSE) {
-
-    SDL_SemWait(espeak_lock);
-    local_use_espeak = use_espeak_thread;
-    SDL_SemPost(espeak_lock);
-
-    if (local_use_espeak == TRUE) {
-      char espeak_command[256] = "espeak -v mb/mb-de4 -s 90 \"";
-      strcat(espeak_command, textlist_get_current());
-      strcat(espeak_command, "\" 2>/dev/null");
-      system(espeak_command);
-      SDL_Delay(500);
-    } else {
-      SDL_Delay(1);
-    }
-  }
-
-  return 0;
-}
-
 void input_init() {
   input_font = TTF_OpenFont(font_file, input_font_size);
 
-  strncpy(input_str, "", sizeof(input_str));
+  wcscpy(input_str, L"");
   input_text = NULL;
   SDL_EnableUNICODE(SDL_ENABLE);
 }
@@ -90,7 +67,14 @@ int init() {
 
   input_init();
 
-  thread1 = SDL_CreateThread(espeak_thread, NULL);
+  textlist_init();
+  textlist_set_random_pos();
+
+  scorelist_load();
+
+  espeak_init();
+
+  timer_start();
 
   return TRUE;
 }
@@ -110,8 +94,7 @@ void input_clean_up() {
 }
 
 void clean_up() {
-  SDL_WaitThread(thread1, NULL);
-  SDL_DestroySemaphore(espeak_lock);
+  espeak_clean_up();
 
   input_clean_up();
 
@@ -143,11 +126,11 @@ void input_show_centered() {
 
 void handle_input() {
   if(event.type == SDL_KEYDOWN) {
-    char temp[256];
-    sprintf(temp, "%s", input_str);
+    wchar_t temp[256];
+    swprintf(temp, 256, L"%ls", input_str);
 
     if (input_str_len < 256) {
-      printf("%d\n", event.key.keysym.unicode);
+      wprintf(L"%d\n", event.key.keysym.unicode);
       if (event.key.keysym.unicode == (Uint16)' ' ||
           (event.key.keysym.unicode >= (Uint16)'a' &&
            event.key.keysym.unicode <= (Uint16)'z') ||
@@ -155,44 +138,42 @@ void handle_input() {
           event.key.keysym.unicode == 252 || // ü
           event.key.keysym.unicode == 228 || // ä
           event.key.keysym.unicode == 246) { // ö
-        sprintf(temp, "%s%c", temp, event.key.keysym.unicode);
+        swprintf(temp, 256, L"%ls%c", temp, event.key.keysym.unicode);
         input_str_len++;
       }
     }
     if (event.key.keysym.sym == SDLK_BACKSPACE && input_str_len > 0) {
-      printf("input len %d\n", input_str_len);
+      wprintf(L"input len %d\n", input_str_len);
       input_str_len--;
-      char temp2[256];
-      strncpy(temp2, "", sizeof(temp2));
+      wchar_t temp2[256];
+      swprintf(temp2, 256, L"");
       if (input_str_len > 0) {
-        strncpy(temp2, temp, input_str_len);
+        wcsncpy(temp2, temp, input_str_len);
       }
-      strncpy(temp, temp2, sizeof(temp));
+      wcsncpy(temp, temp2, wcslen(temp));
     }
-    if (strcmp(temp, input_str) != 0 ) {
+    if (wcscmp(temp, input_str) != 0) {
       SDL_FreeSurface(input_text);
-      strncpy(input_str, temp, sizeof(input_str));
-      input_text = TTF_RenderText_Solid(input_font, input_str, font_color);
+      wcsncpy(input_str, temp, wcslen(input_str));
+      char t_input_str[256];
+      wcsrtombs(t_input_str, &input_str, wcslen(input_str), NULL);
+      input_text = TTF_RenderText_Solid(input_font, t_input_str, font_color);
     }
   }
 }
 
 int main(int argc, char* args[]) {
+  setlocale(LC_ALL, "de_DE.UTF-8");
+
   if (init() == FALSE)
     return 1;
   if (set_footer_message() == FALSE)
     return 1;
 
-  // textlist tests
-  textlist_load();
-  textlist_set_random_pos();
-
-  SDL_SemWait(espeak_lock);
-  use_espeak_thread = TRUE;
-  SDL_SemPost(espeak_lock);
-
   Uint32 frameStart = 0;
   while (quit == FALSE) {
+    espeak_set_run(TRUE);
+    timer_update();
     frameStart = SDL_GetTicks();
 
     while (SDL_PollEvent(&event)) {
@@ -200,17 +181,12 @@ int main(int argc, char* args[]) {
         printf("text entered\n");
         if (textlist_current_compare(input_str) == 0) {
           printf("match\n");
-          SDL_SemWait(espeak_lock);
-          use_espeak_thread = FALSE;
-          SDL_SemPost(espeak_lock);
+
 
           textlist_remove_current();
           textlist_set_random_pos();
           input_init();
 
-          SDL_SemWait(espeak_lock);
-          use_espeak_thread = TRUE;
-          SDL_SemPost(espeak_lock);
 
         } else {
           printf("no match\n");
