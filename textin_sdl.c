@@ -15,7 +15,7 @@ SDL_Surface *screen;
 SDL_Surface *footer_message;
 SDL_Surface *input_text;
 
-wchar_t *input_str;
+wchar_t input_str[256];
 int input_str_len = 0;
 
 int screen_width = 800;
@@ -37,7 +37,7 @@ SDL_Event event;
 void input_init() {
   input_font = TTF_OpenFont(font_file, input_font_size);
 
-  wcscpy(input_str, L"");
+  wcsncpy(input_str, L"", wcslen(input_str));
   input_text = NULL;
   SDL_EnableUNICODE(SDL_ENABLE);
 }
@@ -127,10 +127,10 @@ void input_show_centered() {
 void handle_input() {
   if(event.type == SDL_KEYDOWN) {
     wchar_t temp[256];
+    wchar_t t_char[1];
     swprintf(temp, 256, L"%ls", input_str);
 
     if (input_str_len < 256) {
-      wprintf(L"%d\n", event.key.keysym.unicode);
       if (event.key.keysym.unicode == (Uint16)' ' ||
           (event.key.keysym.unicode >= (Uint16)'a' &&
            event.key.keysym.unicode <= (Uint16)'z') ||
@@ -138,8 +138,10 @@ void handle_input() {
           event.key.keysym.unicode == 252 || // ü
           event.key.keysym.unicode == 228 || // ä
           event.key.keysym.unicode == 246) { // ö
-        swprintf(temp, 256, L"%ls%c", temp, event.key.keysym.unicode);
+        swprintf(t_char, 1, L"%c", event.key.keysym.unicode);
+        wcscat(temp, t_char);
         input_str_len++;
+        wprintf(L"%d = str %ls\n", event.key.keysym.unicode, temp);
       }
     }
     if (event.key.keysym.sym == SDLK_BACKSPACE && input_str_len > 0) {
@@ -153,10 +155,11 @@ void handle_input() {
       wcsncpy(temp, temp2, wcslen(temp));
     }
     if (wcscmp(temp, input_str) != 0) {
+      printf("input change\n");
       SDL_FreeSurface(input_text);
       wcsncpy(input_str, temp, wcslen(input_str));
       char t_input_str[256];
-      wcsrtombs(t_input_str, &input_str, wcslen(input_str), NULL);
+      wcstombs(t_input_str, input_str, 256);
       input_text = TTF_RenderText_Solid(input_font, t_input_str, font_color);
     }
   }
