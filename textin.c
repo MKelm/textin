@@ -4,6 +4,8 @@
 #include "espeak.h"
 
 int quit = FALSE;
+int max_inputs = 30;
+int inputs_count = 0;
 
 wchar_t input_str[256];
 size_t input_str_len = 0;
@@ -29,13 +31,17 @@ int main() {
     if (wcscmp(input_str, L"ende") == 0) {
       quit = TRUE;
     } else if (textlist_current_compare(input_str) == 0) {
-      wprintf(L"--> Eingabe richtig\n");
+      wprintf(L"--> Eingabe %d richtig\n", inputs_count + 1);
+      inputs_count++;
 
-      espeak_lock();;
-      textlist_remove_current();
-      quit = (textlist_set_random_pos() == TRUE) ? FALSE : TRUE;
-      espeak_unlock();
-
+      if (inputs_count == max_inputs) {
+        quit = TRUE;
+      } else {
+        espeak_lock();
+        textlist_remove_current();
+        quit = (textlist_set_random_pos() == TRUE) ? FALSE : TRUE;
+        espeak_unlock();
+      }
       if (quit == FALSE) {
         input_init();
       }
