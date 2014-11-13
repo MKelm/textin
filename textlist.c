@@ -13,12 +13,14 @@ int textlist_length;
 int textlist_current;
 unsigned int textlist_chars_count;
 
+char textlist_file[1024] = "resources/textlist_de.txt";
+
 void textlist_init() {
   srand(time(NULL));
 
   FILE *fp;
   int i = 0;
-  fp = fopen("resources/textlist_de.txt", "r, ccs=UTF-8");
+  fp = fopen(textlist_file, "r, ccs=UTF-8");
   if (fp != NULL) {
     wchar_t chunk[1024];
     while (fgetws(chunk, 1024, fp) != NULL) {
