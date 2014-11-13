@@ -1,2 +1,3 @@
+int scorelist_get_next_pos(unsigned int points);
 int scorelist_add_score(wchar_t *name, unsigned int chars, unsigned int seconds);
-void scorelist_show_score(int pos);
+wchar_t *scorelist_get_score_string(int pos);

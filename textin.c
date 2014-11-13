@@ -16,8 +16,12 @@ void input_name() {
   wprintf(L"\n--> Name: ");
   fgetws(name, 255, stdin);
   name[wcslen(name) - 1] = L'\0';
-  scorelist_show_score(
-    scorelist_add_score(name, textlist_get_chars_count(), timer_get_seconds())
+
+  wprintf(
+    L"--> %ls\n",
+    scorelist_get_score_string(
+      scorelist_add_score(name, textlist_get_chars_count(), timer_get_seconds())
+    )
   );
 }
 
