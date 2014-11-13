@@ -8,12 +8,9 @@ size_t input_str_len = 0;
 
 SDL_Thread *thread1 = NULL;
 SDL_mutex *espeak_lock = NULL;
-SDL_cond *can_espeak = NULL;
 
 int espeak_thread(void *data) {
   while (quit == FALSE) {
-    SDL_CondWait(can_espeak, espeak_lock);
-
     wchar_t espeak_command_w[256] = L"espeak -v mb/mb-de4 -s 90 \"";
 
     SDL_mutexP(espeak_lock);
@@ -39,12 +36,10 @@ int main() {
   textlist_set_random_pos();
 
   espeak_lock = SDL_CreateMutex();
-  can_espeak = SDL_CreateCond();
 
   thread1 = SDL_CreateThread(espeak_thread, NULL);
 
   while (quit == FALSE) {
-    SDL_CondSignal(can_espeak);
     fgetws(input_str, 255, stdin);
     input_str[wcslen(input_str) - 1] = L'\0';
     if (wcscmp(input_str, L"ende") == 0) {
@@ -69,7 +64,6 @@ int main() {
 
   SDL_WaitThread(thread1, NULL);
   SDL_DestroyMutex(espeak_lock);
-  SDL_DestroyCond(can_espeak);
 
   return 0;
 }
