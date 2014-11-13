@@ -5,3 +5,6 @@
 #include "SDL/SDL_thread.h"
 #include <locale.h>
 #include <wchar.h>
+
+#define FALSE 0
+#define TRUE 1

@@ -7,7 +7,6 @@
 struct st_textlist {
   wchar_t text[128];
   size_t text_len;
-  int used;
 } textlist[TEXTLIST_MAX_LENGTH];
 int textlist_length;
 
@@ -27,7 +26,6 @@ void textlist_load() {
       if (wcslen(chunk) > 0) {
         wcscpy(textlist[i].text, chunk);
         textlist[i].text_len = wcslen(chunk);
-        textlist[i].used = 0;
         i++;
       }
     }
@@ -36,8 +34,13 @@ void textlist_load() {
   textlist_length = i;
 }
 
-void textlist_set_random_pos() {
-  textlist_current = rand() % textlist_length;
+int textlist_set_random_pos() {
+  if (textlist_length > 0) {
+    textlist_current = rand() % textlist_length;
+    return TRUE;
+  } else {
+    return FALSE;
+  }
 }
 
 wchar_t *textlist_get_current() {

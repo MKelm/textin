@@ -1,9 +1,6 @@
 #include "global.h"
 #include "textlist.h"
 
-#define FALSE 0
-#define TRUE 1
-
 int quit = FALSE;
 
 wchar_t input_str[256];
@@ -63,12 +60,14 @@ int main() {
       SDL_SemPost(espeak_lock);
 
       textlist_remove_current();
-      textlist_set_random_pos();
-      input_init();
+      quit = (textlist_set_random_pos() == TRUE) ? FALSE : TRUE;
+      if (quit == FALSE) {
+        input_init();
 
-      SDL_SemWait(espeak_lock);
-      use_espeak_thread = TRUE;
-      SDL_SemPost(espeak_lock);
+        SDL_SemWait(espeak_lock);
+        use_espeak_thread = TRUE;
+        SDL_SemPost(espeak_lock);
+      }
     } else {
       wprintf(L"falsch\n");
     }
