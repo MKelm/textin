@@ -14,15 +14,6 @@ int textlist_length;
 int textlist_current = -1;
 size_t textlist_chars_counter = 0;
 
-int textlist_strlen_utf8(char *s) {
-  int i = 0, j = 0;
-  while (s[i]) {
-    if ((s[i] & 0xc0) != 0x80) j++;
-    i++;
-  }
-  return j;
-}
-
 void textlist_load() {
   srand(time(NULL));
 
