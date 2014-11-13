@@ -127,7 +127,7 @@ void input_show_centered() {
 void handle_input() {
   if(event.type == SDL_KEYDOWN) {
     wchar_t temp[256];
-    wchar_t t_char[1];
+    wchar_t t_char[4];
     swprintf(temp, 256, L"%ls", input_str);
 
     if (input_str_len < 256) {
@@ -138,26 +138,25 @@ void handle_input() {
           event.key.keysym.unicode == 252 || // ü
           event.key.keysym.unicode == 228 || // ä
           event.key.keysym.unicode == 246) { // ö
-        swprintf(t_char, 1, L"%c", event.key.keysym.unicode);
+        swprintf(t_char, 4, L"%c", event.key.keysym.unicode);
         wcscat(temp, t_char);
-        input_str_len++;
-        wprintf(L"%d = str %ls\n", event.key.keysym.unicode, temp);
+        input_str_len = wcslen(temp);
       }
     }
     if (event.key.keysym.sym == SDLK_BACKSPACE && input_str_len > 0) {
       wprintf(L"input len %d\n", input_str_len);
       input_str_len--;
       wchar_t temp2[256];
-      swprintf(temp2, 256, L"");
-      if (input_str_len > 0) {
+      if (input_str_len > 0)
         wcsncpy(temp2, temp, input_str_len);
-      }
-      wcsncpy(temp, temp2, wcslen(temp));
+      else
+        wcsncpy(temp2, L"", wcslen(temp2));
+      wcsncpy(temp, temp2, wcslen(temp2));
     }
     if (wcscmp(temp, input_str) != 0) {
-      printf("input change\n");
+      wprintf(L"input change\n");
       SDL_FreeSurface(input_text);
-      wcsncpy(input_str, temp, wcslen(input_str));
+      wcsncpy(input_str, temp, wcslen(temp));
       char t_input_str[256];
       wcstombs(t_input_str, input_str, 256);
       input_text = TTF_RenderText_Solid(input_font, t_input_str, font_color);
@@ -181,18 +180,17 @@ int main(int argc, char* args[]) {
 
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_RETURN) {
-        printf("text entered\n");
+        wprintf(L"text entered\n");
         if (textlist_current_compare(input_str) == 0) {
-          printf("match\n");
-
+          wprintf(L"match\n");
 
           textlist_remove_current();
           textlist_set_random_pos();
           input_init();
 
-
         } else {
-          printf("no match\n");
+          input_init();
+          wprintf(L"no match\n");
         }
       } else {
         handle_input();
