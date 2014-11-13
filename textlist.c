@@ -50,6 +50,13 @@ wchar_t *textlist_get_current() {
     return L"";
 }
 
+size_t textlist_get_current_text_len() {
+  if (textlist_current > -1)
+    return textlist[textlist_current].text_len;
+  else
+    return (size_t)0;
+}
+
 int textlist_current_compare(wchar_t *text) {
   return wcscmp(textlist[textlist_current].text, text);
 }

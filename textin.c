@@ -13,7 +13,7 @@ size_t input_str_len = 0;
 
 void input_name() {
   wchar_t name[256];
-  wprintf(L"--> Name: ");
+  wprintf(L"\n--> Name: ");
   fgetws(name, 255, stdin);
   name[wcslen(name) - 1] = L'\0';
   scorelist_show_score(
@@ -32,7 +32,8 @@ int main() {
   timer_start();
   while (quit == FALSE) {
     espeak_set_run(TRUE);
-
+    wprintf(L"\n--> Gesuchtes Wort mit %d Buchstaben\n", textlist_get_current_text_len());
+    wprintf(L"--> ");
     fgetws(input_str, 255, stdin);
     input_str[wcslen(input_str) - 1] = L'\0';
     timer_update();
@@ -42,6 +43,7 @@ int main() {
     } else if (textlist_current_compare(input_str) == 0) {
       wprintf(L"--> %d. Eingabe richtig\n", inputs_count + 1);
       inputs_count++;
+      wprintf(L"--> Zeit: %u Sekunden\n", timer_get_seconds());
 
       if (inputs_count == max_inputs) {
         quit = TRUE;
@@ -55,9 +57,6 @@ int main() {
       }
     } else {
       wprintf(L"--> Eingabe falsch\n");
-    }
-    if (quit == FALSE) {
-      wprintf(L"--> Zeit: %u Sekunden\n", timer_get_seconds());
     }
   }
 
