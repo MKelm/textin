@@ -191,10 +191,16 @@ void show_timer_text() {
   );
 }
 
-void show_info_text() {
+void show_info_text(int valid_input) {
   SDL_FreeSurface(info_text);
   char info[256];
-  sprintf(info, "%d Buchstaben", textlist_get_current_text_len());
+  sprintf(info, "gesucht %d Buchstaben", textlist_get_current_text_len());
+  if (valid_input > -1) {
+    sprintf(info, "%s - letzte Eingabe %s",
+      info, (valid_input == TRUE) ? "richtig" : "falsch");
+  } else {
+    sprintf(info, "%s - keine Eingabe bisher", info);
+  }
   info_text = TTF_RenderText_Solid(font, info, font_color);
   apply_surface(
     screen_width / 2 - info_text->w / 2, screen_height / 2 + 1.2 * font_size,
@@ -210,6 +216,7 @@ int main(int argc, char* args[]) {
 
   Uint32 frameStart = 0;
   espeak_set_run(TRUE);
+  int valid_input = -1;
   while (quit == FALSE) {
     timer_update();
     frameStart = SDL_GetTicks();
@@ -219,6 +226,8 @@ int main(int argc, char* args[]) {
 
         int skip_input = (strcmp(input_str, "") == 0) ? TRUE : FALSE;
         if (textlist_current_compare(input_str_w) == 0 || skip_input == TRUE) {
+          if (skip_input == FALSE)
+            valid_input = TRUE;
           inputs_count++;
           espeak_lock();
           textlist_remove_current(skip_input);
@@ -244,6 +253,7 @@ int main(int argc, char* args[]) {
             espeak_set_run(TRUE);
           }
         } else {
+          valid_input = FALSE;
           input_init();
           espeak_set_run(TRUE);
         }
@@ -265,7 +275,7 @@ int main(int argc, char* args[]) {
     SDL_FillRect(screen, &screen->clip_rect, SDL_MapRGB(screen->format, 0, 0, 0));
 
     show_timer_text();
-    show_info_text();
+    show_info_text(valid_input);
     input_show_centered();
 
     apply_surface(
