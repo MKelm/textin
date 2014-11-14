@@ -10,6 +10,8 @@
 #define FPS 15
 
 int quit = FALSE;
+int max_inputs = 10;
+int inputs_count = 0;
 
 SDL_Surface *screen;
 SDL_Surface *header_message;
@@ -36,7 +38,7 @@ int input_font_size = 64;
 
 SDL_Event event;
 
-void init_input() {
+void input_init() {
   input_font = TTF_OpenFont(font_file, input_font_size);
 
   strncpy(input_str, "", strlen(input_str));
@@ -84,7 +86,7 @@ int init() {
   strcat(wt_temp, window_footer_str);
   SDL_WM_SetCaption(wt_temp, NULL);
 
-  init_input();
+  input_init();
 
   textlist_init();
   textlist_set_random_pos();
@@ -186,14 +188,33 @@ int main(int argc, char* args[]) {
 
         int skip_input = (strcmp(input_str, "") == 0) ? TRUE : FALSE;
         if (textlist_current_compare(input_str_w) == 0 || skip_input == TRUE) {
-
+          inputs_count++;
+          espeak_lock();
           textlist_remove_current(skip_input);
-          textlist_set_random_pos();
-          init_input();
-          espeak_set_run(TRUE);
+          espeak_unlock();
 
+          if (inputs_count == max_inputs) {
+            wprintf(L"max inputs count reached\n");
+            // todo enter name logic
+            //if (input_continue() == FALSE) {
+              //quit = TRUE;
+            //} else {
+              textlist_init();
+              textlist_set_random_pos();
+              espeak_set_run(TRUE);
+              timer_start();
+              inputs_count = 0;
+            //}
+          }
+          if (quit == FALSE) {
+            espeak_lock();
+            quit = (textlist_set_random_pos() == TRUE) ? FALSE : TRUE;
+            espeak_unlock();
+            input_init();
+            espeak_set_run(TRUE);
+          }
         } else {
-          init_input();
+          input_init();
           espeak_set_run(TRUE);
         }
       } else {
