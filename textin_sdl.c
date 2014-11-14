@@ -18,6 +18,7 @@ SDL_Surface *header_message;
 SDL_Surface *footer_message;
 SDL_Surface *input_text;
 SDL_Surface *timer_text;
+SDL_Surface *info_text;
 
 char input_str[256];
 wchar_t input_str_w[256];
@@ -112,6 +113,7 @@ void clean_up() {
 
   input_clean_up();
 
+  SDL_FreeSurface(info_text);
   SDL_FreeSurface(timer_text);
   SDL_FreeSurface(header_message);
   SDL_FreeSurface(footer_message);
@@ -189,6 +191,17 @@ void show_timer_text() {
   );
 }
 
+void show_info_text() {
+  SDL_FreeSurface(info_text);
+  char info[256];
+  sprintf(info, "%d Buchstaben", textlist_get_current_text_len());
+  info_text = TTF_RenderText_Solid(font, info, font_color);
+  apply_surface(
+    screen_width / 2 - info_text->w / 2, screen_height / 2 + 1.2 * font_size,
+    info_text, screen
+  );
+}
+
 int main(int argc, char* args[]) {
   setlocale(LC_ALL, "de_DE.UTF-8");
 
@@ -252,6 +265,7 @@ int main(int argc, char* args[]) {
     SDL_FillRect(screen, &screen->clip_rect, SDL_MapRGB(screen->format, 0, 0, 0));
 
     show_timer_text();
+    show_info_text();
     input_show_centered();
 
     apply_surface(
