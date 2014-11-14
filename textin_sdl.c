@@ -17,6 +17,7 @@ SDL_Surface *screen;
 SDL_Surface *header_message;
 SDL_Surface *footer_message;
 SDL_Surface *input_text;
+SDL_Surface *timer_text;
 
 char input_str[256];
 wchar_t input_str_w[256];
@@ -111,6 +112,8 @@ void clean_up() {
 
   input_clean_up();
 
+  SDL_FreeSurface(timer_text);
+  SDL_FreeSurface(header_message);
   SDL_FreeSurface(footer_message);
 
   TTF_CloseFont(font);
@@ -176,6 +179,16 @@ void handle_input() {
   }
 }
 
+void show_timer_text() {
+  SDL_FreeSurface(timer_text);
+  char time[128];
+  sprintf(time, "%d", timer_get_seconds());
+  timer_text = TTF_RenderText_Solid(input_font, time, font_color);
+  apply_surface(
+    screen_width - timer_text->w, 0, timer_text, screen
+  );
+}
+
 int main(int argc, char* args[]) {
   setlocale(LC_ALL, "de_DE.UTF-8");
 
@@ -206,7 +219,6 @@ int main(int argc, char* args[]) {
             //} else {
               textlist_init();
               textlist_set_random_pos();
-              espeak_set_run(TRUE);
               timer_start();
               inputs_count = 0;
             //}
@@ -239,6 +251,7 @@ int main(int argc, char* args[]) {
 
     SDL_FillRect(screen, &screen->clip_rect, SDL_MapRGB(screen->format, 0, 0, 0));
 
+    show_timer_text();
     input_show_centered();
 
     apply_surface(
