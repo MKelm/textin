@@ -2,7 +2,7 @@
 #include "textlist.h"
 #include <time.h>
 
-#define TEXTLIST_MAX_LENGTH 1024
+#define TEXTLIST_MAX_LENGTH 1212
 
 struct st_textlist {
   wchar_t text[128];
@@ -62,12 +62,13 @@ size_t textlist_get_current_text_len() {
     return (size_t)0;
 }
 
-int textlist_current_compare(wchar_t *text) {
-  return wcscmp(textlist[textlist_current].text, text);
+int textlist_current_compare(const wchar_t *text) {
+  return wcscasecmp(textlist[textlist_current].text, text);
 }
 
-void textlist_remove_current() {
-  textlist_chars_count += (unsigned int)textlist[textlist_current].text_len;
+void textlist_remove_current(int skip_chars_count) {
+  if (skip_chars_count == FALSE)
+    textlist_chars_count += (unsigned int)textlist[textlist_current].text_len;
   int i;
   for (i = textlist_current; i < textlist_length - 1; i++) {
     textlist[i] = textlist[i+1];

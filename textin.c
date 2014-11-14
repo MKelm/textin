@@ -68,15 +68,20 @@ int main() {
     input_str[wcslen(input_str) - 1] = L'\0';
     timer_update();
 
-    if (wcscmp(input_str, L"ende") == 0) {
+    int skip_input = (wcscmp(input_str, L"") == 0) ? TRUE : FALSE;
+    if (wcscmp(input_str, L"beenden") == 0) {
       quit = TRUE;
-    } else if (textlist_current_compare(input_str) == 0) {
-      wprintf(L"--> %d. Eingabe richtig\n", inputs_count + 1);
+
+    } else if (textlist_current_compare(input_str) == 0 || skip_input == TRUE) {
+      if (skip_input == FALSE)
+        wprintf(L"--> %d. Eingabe richtig\n", inputs_count + 1);
+      else
+        wprintf(L"--> %d. Eingabe übersprungen\n", inputs_count + 1);
       inputs_count++;
       wprintf(L"--> Zeit: %u Sekunden\n", timer_get_seconds());
 
       espeak_lock();
-      textlist_remove_current();
+      textlist_remove_current(skip_input);
       espeak_unlock();
 
       if (inputs_count == max_inputs) {
