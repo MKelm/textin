@@ -62,7 +62,7 @@ size_t textlist_get_current_text_len() {
     return (size_t)0;
 }
 
-int textlist_current_compare(const wchar_t *text) {
+int textlist_current_compare(wchar_t *text) {
   return wcscasecmp(textlist[textlist_current].text, text);
 }
 
