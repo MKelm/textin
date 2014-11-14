@@ -12,17 +12,19 @@
 int quit = FALSE;
 
 SDL_Surface *screen;
+SDL_Surface *header_message;
 SDL_Surface *footer_message;
 SDL_Surface *input_text;
 
 char input_str[256];
+wchar_t input_str_w[256];
 int input_str_len = 0;
 
 int screen_width = 800;
 int screen_height = 600;
 int screen_bpp = 32;
 
-char window_title_str[256] = "TextIn";
+char window_header_str[256] = "TextIn";
 char window_footer_str[256] = "Martin Kelm, 2014";
 
 char font_file[128] = "resources/beyourself.ttf";
@@ -34,12 +36,25 @@ int input_font_size = 64;
 
 SDL_Event event;
 
-void input_init() {
+void init_input() {
   input_font = TTF_OpenFont(font_file, input_font_size);
 
   strncpy(input_str, "", strlen(input_str));
+  wcsncpy(input_str_w, L"", wcslen(input_str_w));
   input_text = NULL;
   SDL_EnableUNICODE(SDL_ENABLE);
+}
+
+int init_messages() {
+  footer_message = TTF_RenderText_Solid(font, window_footer_str, font_color);
+  if (footer_message == NULL) {
+    return FALSE;
+  }
+  header_message = TTF_RenderText_Solid(font, window_header_str, font_color);
+  if (header_message == NULL) {
+    return FALSE;
+  }
+  return TRUE;
 }
 
 int init() {
@@ -63,9 +78,13 @@ int init() {
     return FALSE;
   }
 
-  SDL_WM_SetCaption(window_title_str, NULL);
+  char wt_temp[256] = "";
+  strcat(wt_temp, window_header_str);
+  strcat(wt_temp, " - ");
+  strcat(wt_temp, window_footer_str);
+  SDL_WM_SetCaption(wt_temp, NULL);
 
-  input_init();
+  init_input();
 
   textlist_init();
   textlist_set_random_pos();
@@ -76,15 +95,7 @@ int init() {
 
   timer_start();
 
-  return TRUE;
-}
-
-int set_footer_message() {
-  footer_message = TTF_RenderText_Solid(font, window_footer_str, font_color);
-  if (footer_message == NULL) {
-    return FALSE;
-  }
-  return TRUE;
+  return init_messages();
 }
 
 void input_clean_up() {
@@ -137,6 +148,10 @@ void handle_input() {
           event.key.keysym.unicode == 246) { // ö
 
         sprintf(input_str, "%s%c", input_str, event.key.keysym.unicode);
+        wchar_t tmp[256];
+        swprintf(tmp, 256, L"%lc", event.key.keysym.unicode);
+        wcscat(input_str_w, tmp);
+
         input_str_len++;
         input_change = TRUE;
       }
@@ -144,6 +159,7 @@ void handle_input() {
     if (event.key.keysym.sym == SDLK_BACKSPACE && input_str_len > 0) {
       input_str_len--;
       input_str[strlen(input_str)-1] = '\0';
+      input_str_w[wcslen(input_str_w)-1] = '\0';
       input_change = TRUE;
     }
     if (input_change == TRUE) {
@@ -153,21 +169,10 @@ void handle_input() {
   }
 }
 
-const wchar_t *get_wcs(const char *c_str) {
-  const size_t c_size = strlen(c_str)+1;
-  static wchar_t wcs[256];
-  mbsrtowcs(wcs, &c_str, c_size, NULL);
-  // todo: command removes german special chars
-  wprintf(L"convert input to %ls\n", wcs);
-  return wcs;
-}
-
 int main(int argc, char* args[]) {
   setlocale(LC_ALL, "de_DE.UTF-8");
 
   if (init() == FALSE)
-    return 1;
-  if (set_footer_message() == FALSE)
     return 1;
 
   Uint32 frameStart = 0;
@@ -180,15 +185,15 @@ int main(int argc, char* args[]) {
       if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_RETURN) {
 
         int skip_input = (strcmp(input_str, "") == 0) ? TRUE : FALSE;
-        if (textlist_current_compare(get_wcs(input_str)) == 0 || skip_input == TRUE) {
+        if (textlist_current_compare(input_str_w) == 0 || skip_input == TRUE) {
 
           textlist_remove_current(skip_input);
           textlist_set_random_pos();
-          input_init();
+          init_input();
           espeak_set_run(TRUE);
 
         } else {
-          input_init();
+          init_input();
           espeak_set_run(TRUE);
         }
       } else {
@@ -214,6 +219,7 @@ int main(int argc, char* args[]) {
       screen_width - footer_message->w, screen_height - footer_message->h,
       footer_message, screen
     );
+    apply_surface(0, 0, header_message, screen);
     if (SDL_Flip(screen) == -1)
       return 1;
 
