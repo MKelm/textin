@@ -155,11 +155,11 @@ void handle_input() {
 
 const wchar_t *get_wcs(const char *c_str) {
   const size_t c_size = strlen(c_str)+1;
-  static wchar_t wc[256];
-  mbsrtowcs(wc, &c_str, c_size, NULL);
+  static wchar_t wcs[256];
+  mbsrtowcs(wcs, &c_str, c_size, NULL);
   // todo: command removes german special chars
-  wprintf(L"convert input to %ls\n", wc);
-  return wc;
+  wprintf(L"convert input to %ls\n", wcs);
+  return wcs;
 }
 
 int main(int argc, char* args[]) {
