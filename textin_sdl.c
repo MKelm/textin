@@ -191,15 +191,19 @@ void show_timer_text() {
   );
 }
 
-void show_info_text(int valid_input) {
+void show_info_text(int valid_input, int do_input_name) {
   SDL_FreeSurface(info_text);
   char info[256];
-  sprintf(info, "gesucht %d Buchstaben", textlist_get_current_text_len());
-  if (valid_input > -1) {
-    sprintf(info, "%s - letzte Eingabe %s",
-      info, (valid_input == TRUE) ? "richtig" : "falsch");
+  if (do_input_name == TRUE) {
+    sprintf(info, "bitte Namen eingeben");
   } else {
-    sprintf(info, "%s - keine Eingabe bisher", info);
+    sprintf(info, "gesucht %d Buchstaben", textlist_get_current_text_len());
+    if (valid_input > -1) {
+      sprintf(info, "%s - letzte Eingabe %s",
+        info, (valid_input == TRUE) ? "richtig" : "falsch");
+    } else {
+      sprintf(info, "%s - keine Eingabe bisher", info);
+    }
   }
   info_text = TTF_RenderText_Solid(font, info, font_color);
   apply_surface(
@@ -217,15 +221,26 @@ int main(int argc, char* args[]) {
   Uint32 frameStart = 0;
   espeak_set_run(TRUE);
   int valid_input = -1;
+  int do_input_name = FALSE;
   while (quit == FALSE) {
-    timer_update();
+    if (do_input_name == FALSE)
+      timer_update();
     frameStart = SDL_GetTicks();
 
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_RETURN) {
 
         int skip_input = (strcmp(input_str, "") == 0) ? TRUE : FALSE;
-        if (textlist_current_compare(input_str_w) == 0 || skip_input == TRUE) {
+        if (do_input_name == TRUE && strcmp(input_str, "") != 0) {
+          wprintf(
+            L"--> %ls\n",
+            scorelist_get_score_string(
+              scorelist_add_score(input_str_w, textlist_get_chars_count(), timer_get_seconds()),
+              TRUE
+            )
+          );
+
+        } else if (textlist_current_compare(input_str_w) == 0 || skip_input == TRUE) {
           if (skip_input == FALSE)
             valid_input = TRUE;
           inputs_count++;
@@ -235,17 +250,18 @@ int main(int argc, char* args[]) {
 
           if (inputs_count == max_inputs) {
             wprintf(L"max inputs count reached\n");
-            // todo enter name logic
+            do_input_name = TRUE;
+            input_init();
             //if (input_continue() == FALSE) {
               //quit = TRUE;
             //} else {
-              textlist_init();
+             /* textlist_init();
               textlist_set_random_pos();
               timer_start();
-              inputs_count = 0;
+              inputs_count = 0; */
             //}
           }
-          if (quit == FALSE) {
+          if (do_input_name == FALSE && quit == FALSE) {
             espeak_lock();
             quit = (textlist_set_random_pos() == TRUE) ? FALSE : TRUE;
             espeak_unlock();
@@ -275,7 +291,7 @@ int main(int argc, char* args[]) {
     SDL_FillRect(screen, &screen->clip_rect, SDL_MapRGB(screen->format, 0, 0, 0));
 
     show_timer_text();
-    show_info_text(valid_input);
+    show_info_text(valid_input, do_input_name);
     input_show_centered();
 
     apply_surface(
