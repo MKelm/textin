@@ -134,6 +134,11 @@ void input_show_centered() {
       input_text, screen
     );
   }
+  hlineColor(
+    screen,
+    screen_width * 0.1, screen_width * 0.9, screen_height / 2 + font_size,
+    0xFFFFFFFF
+  );
 }
 
 void handle_input() {
