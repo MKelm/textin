@@ -15,7 +15,7 @@ SDL_Surface *screen;
 SDL_Surface *footer_message;
 SDL_Surface *input_text;
 
-wchar_t input_str[256];
+char input_str[256];
 int input_str_len = 0;
 
 int screen_width = 800;
@@ -37,7 +37,7 @@ SDL_Event event;
 void input_init() {
   input_font = TTF_OpenFont(font_file, input_font_size);
 
-  wcsncpy(input_str, L"", wcslen(input_str));
+  strncpy(input_str, "", strlen(input_str));
   input_text = NULL;
   SDL_EnableUNICODE(SDL_ENABLE);
 }
@@ -123,7 +123,6 @@ void input_show_centered() {
   }
 }
 
-
 void handle_input() {
   if (event.type == SDL_KEYDOWN) {
     int input_change = FALSE;
@@ -137,28 +136,30 @@ void handle_input() {
           event.key.keysym.unicode == 228 || // ä
           event.key.keysym.unicode == 246) { // ö
 
-        wchar_t wc = event.key.keysym.unicode;
-        wchar_t t_char[sizeof(wchar_t)];
-        swprintf(t_char, sizeof(wchar_t), L"%lc", wc);
-        wcscat(input_str, t_char);
-        input_str_len = wcslen(input_str);
+        sprintf(input_str, "%s%c", input_str, event.key.keysym.unicode);
+        input_str_len++;
         input_change = TRUE;
       }
     }
     if (event.key.keysym.sym == SDLK_BACKSPACE && input_str_len > 0) {
-      input_str_len = wcslen(input_str) - 1;
-      wcsncpy(input_str, input_str, input_str_len);
-      wprintf(L"new input len %d with str %ls\n", input_str_len, input_str);
+      input_str_len--;
+      input_str[strlen(input_str)-1] = '\0';
       input_change = TRUE;
     }
     if (input_change == TRUE) {
-      wprintf(L"input change\n");
       SDL_FreeSurface(input_text);
-      char t_input_str[256] = "";
-      wcstombs(t_input_str, input_str, input_str_len);
-      input_text = TTF_RenderText_Solid(input_font, t_input_str, font_color);
+      input_text = TTF_RenderText_Solid(input_font, input_str, font_color);
     }
   }
+}
+
+const wchar_t *get_wcs(const char *c_str) {
+  const size_t c_size = strlen(c_str)+1;
+  static wchar_t wc[256];
+  mbsrtowcs(wc, &c_str, c_size, NULL);
+  // todo: command removes german special chars
+  wprintf(L"convert input to %ls\n", wc);
+  return wc;
 }
 
 int main(int argc, char* args[]) {
@@ -170,24 +171,25 @@ int main(int argc, char* args[]) {
     return 1;
 
   Uint32 frameStart = 0;
+  espeak_set_run(TRUE);
   while (quit == FALSE) {
-    espeak_set_run(TRUE);
     timer_update();
     frameStart = SDL_GetTicks();
 
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_RETURN) {
-        wprintf(L"text entered\n");
-        if (textlist_current_compare(input_str) == 0) {
-          wprintf(L"match\n");
 
-          textlist_remove_current();
+        int skip_input = (strcmp(input_str, "") == 0) ? TRUE : FALSE;
+        if (textlist_current_compare(get_wcs(input_str)) == 0 || skip_input == TRUE) {
+
+          textlist_remove_current(skip_input);
           textlist_set_random_pos();
           input_init();
+          espeak_set_run(TRUE);
 
         } else {
           input_init();
-          wprintf(L"no match\n");
+          espeak_set_run(TRUE);
         }
       } else {
         handle_input();
