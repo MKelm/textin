@@ -1,12 +1,7 @@
 #include "global.h"
 #include "scorelist.h"
 
-struct st_scorelist {
-  wchar_t name[256];
-  unsigned int chars;
-  unsigned int seconds;
-  unsigned int points;
-} scorelist[SCORELIST_MAX_LENGTH];
+struct st_scorelist scorelist[SCORELIST_MAX_LENGTH];
 
 int scorelist_length = 0;
 
@@ -46,6 +41,10 @@ int scorelist_add_score(wchar_t *name, unsigned int chars, unsigned int seconds)
     }
   }
   return pos;
+}
+
+struct st_scorelist scorelist_get_score(int pos) {
+  return scorelist[pos];
 }
 
 wchar_t *scorelist_get_score_string(int pos, int with_name) {

@@ -199,10 +199,16 @@ void show_timer_text() {
 
 void output_scores() {
   int i, list_length = scorelist_get_length();
+  char output[1024];
+  struct st_scorelist score;
   for (i = 0; i < list_length; i++) {
     SDL_FreeSurface(highscores[i]);
 
-    highscores[i] = TTF_RenderText_Solid(font, "test 1234", font_color);
+    score = scorelist_get_score(i);
+    sprintf(output, "%d. Punkte %d (%d Buchstaben in %d Sekunden)",
+      i+1, score.points, score.chars, score.seconds);
+
+    highscores[i] = TTF_RenderText_Solid(font, output, font_color);
     apply_surface(
       screen_width / 2 - highscores[i]->w / 2, screen_height * 0.2 + font_size * (i + 1),
       highscores[i], screen
@@ -248,7 +254,7 @@ int main(int argc, char* args[]) {
   int input_move_y = 0;
 
   while (quit == FALSE) {
-    if (do_input_name == FALSE)
+    if (do_input_name == FALSE && do_input_continue == FALSE)
       timer_update();
     frameStart = SDL_GetTicks();
 
@@ -260,6 +266,7 @@ int main(int argc, char* args[]) {
           if (strcmp(input_str, "nein") == 0) {
             quit = TRUE;
           } else {
+            do_input_continue = FALSE;
             textlist_init();
             textlist_set_random_pos();
             timer_start();
@@ -270,6 +277,7 @@ int main(int argc, char* args[]) {
         } else if (do_input_name == TRUE && strcmp(input_str, "") != 0) {
           scorelist_add_score(input_str_w, textlist_get_chars_count(), timer_get_seconds());
           do_input_continue = TRUE;
+          do_input_name = FALSE;
           input_init();
 
         } else if (textlist_current_compare(input_str_w) == 0 || skip_input == TRUE) {
