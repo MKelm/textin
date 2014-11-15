@@ -205,8 +205,8 @@ void output_scores() {
     SDL_FreeSurface(highscores[i]);
 
     score = scorelist_get_score(i);
-    sprintf(output, "%d. Punkte %d (%d Buchstaben in %d Sekunden)",
-      i+1, score.points, score.chars, score.seconds);
+    sprintf(output, "%d. %ls, %d Punkte (%d Buchstaben in %d Sekunden)",
+      i+1, score.name, score.points, score.chars, score.seconds);
 
     highscores[i] = TTF_RenderText_Solid(font, output, font_color);
     apply_surface(
