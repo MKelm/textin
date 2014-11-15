@@ -10,7 +10,7 @@
 #define FPS 15
 
 int quit = FALSE;
-int max_inputs = 1;
+int max_inputs = 10;
 int inputs_count = 0;
 
 SDL_Surface *screen;
