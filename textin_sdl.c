@@ -10,7 +10,7 @@
 #define FPS 15
 
 int quit = FALSE;
-int max_inputs = 10;
+int max_inputs = 1;
 int inputs_count = 0;
 
 SDL_Surface *screen;
@@ -19,6 +19,7 @@ SDL_Surface *footer_message;
 SDL_Surface *input_text;
 SDL_Surface *timer_text;
 SDL_Surface *info_text;
+SDL_Surface *highscores[SCORELIST_MAX_LENGTH];
 
 char input_str[256];
 wchar_t input_str_w[256];
@@ -118,6 +119,11 @@ void clean_up() {
   SDL_FreeSurface(header_message);
   SDL_FreeSurface(footer_message);
 
+  int i;
+  for (i = 0; i < SCORELIST_MAX_LENGTH; i++) {
+    SDL_FreeSurface(highscores[i]);
+  }
+
   TTF_CloseFont(font);
   TTF_Quit();
 
@@ -132,16 +138,16 @@ void apply_surface(int x, int y, SDL_Surface* source, SDL_Surface* destination) 
   SDL_BlitSurface(source, NULL, destination, &offset);
 }
 
-void input_show_centered() {
+void input_show_centered(int move_y) {
   if (input_text != NULL) {
     apply_surface(
-      (screen_width - input_text->w) / 2, (screen_height - input_text->h) / 2,
+      (screen_width - input_text->w) / 2, (screen_height - input_text->h) / 2 + move_y,
       input_text, screen
     );
   }
   hlineColor(
     screen,
-    screen_width * 0.1, screen_width * 0.9, screen_height / 2 + font_size,
+    screen_width * 0.1, screen_width * 0.9, screen_height / 2 + font_size + move_y,
     0xFFFFFFFF
   );
 }
@@ -191,7 +197,21 @@ void show_timer_text() {
   );
 }
 
-void show_info_text(int valid_input, int do_input_name, int do_input_continue) {
+void output_scores() {
+  int i, list_length = scorelist_get_length();
+  for (i = 0; i < list_length; i++) {
+    SDL_FreeSurface(highscores[i]);
+
+    highscores[i] = TTF_RenderText_Solid(font, "test 1234", font_color);
+    apply_surface(
+      screen_width / 2 - highscores[i]->w / 2, screen_height * 0.2 + font_size * (i + 1),
+      highscores[i], screen
+    );
+  }
+  scorelist_save();
+}
+
+void show_info_text(int valid_input, int do_input_name, int do_input_continue, int move_y) {
   SDL_FreeSurface(info_text);
   char info[256];
   if (do_input_continue == TRUE) {
@@ -209,7 +229,7 @@ void show_info_text(int valid_input, int do_input_name, int do_input_continue) {
   }
   info_text = TTF_RenderText_Solid(font, info, font_color);
   apply_surface(
-    screen_width / 2 - info_text->w / 2, screen_height / 2 + 1.2 * font_size,
+    screen_width / 2 - info_text->w / 2, screen_height / 2 + 1.2 * font_size + move_y,
     info_text, screen
   );
 }
@@ -225,6 +245,7 @@ int main(int argc, char* args[]) {
   int valid_input = -1;
   int do_input_name = FALSE;
   int do_input_continue = FALSE;
+  int input_move_y = 0;
 
   while (quit == FALSE) {
     if (do_input_name == FALSE)
@@ -247,13 +268,7 @@ int main(int argc, char* args[]) {
             espeak_set_run(TRUE);
           }
         } else if (do_input_name == TRUE && strcmp(input_str, "") != 0) {
-          wprintf(
-            L"--> %ls\n",
-            scorelist_get_score_string(
-              scorelist_add_score(input_str_w, textlist_get_chars_count(), timer_get_seconds()),
-              TRUE
-            )
-          );
+          scorelist_add_score(input_str_w, textlist_get_chars_count(), timer_get_seconds());
           do_input_continue = TRUE;
           input_init();
 
@@ -299,8 +314,12 @@ int main(int argc, char* args[]) {
     SDL_FillRect(screen, &screen->clip_rect, SDL_MapRGB(screen->format, 0, 0, 0));
 
     show_timer_text();
-    show_info_text(valid_input, do_input_name, do_input_continue);
-    input_show_centered();
+    input_move_y = (do_input_continue == TRUE) ? screen_height * 0.1 : 0;
+
+    if (do_input_continue == TRUE)
+      output_scores();
+    show_info_text(valid_input, do_input_name, do_input_continue, input_move_y);
+    input_show_centered(input_move_y);
 
     apply_surface(
       screen_width - footer_message->w, screen_height - footer_message->h,

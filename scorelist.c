@@ -1,8 +1,6 @@
 #include "global.h"
 #include "scorelist.h"
 
-#define SCORELIST_MAX_LENGTH 5
-
 struct st_scorelist {
   wchar_t name[256];
   unsigned int chars;
