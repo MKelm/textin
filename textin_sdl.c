@@ -51,11 +51,11 @@ void input_init() {
 }
 
 int init_messages() {
-  footer_message = TTF_RenderText_Solid(font, window_footer_str, font_color);
+  footer_message = TTF_RenderText_Blended(font, window_footer_str, font_color);
   if (footer_message == NULL) {
     return FALSE;
   }
-  header_message = TTF_RenderText_Solid(font, window_header_str, font_color);
+  header_message = TTF_RenderText_Blended(font, window_header_str, font_color);
   if (header_message == NULL) {
     return FALSE;
   }
@@ -182,7 +182,7 @@ void handle_input() {
     }
     if (input_change == TRUE) {
       SDL_FreeSurface(input_text);
-      input_text = TTF_RenderText_Solid(input_font, input_str, font_color);
+      input_text = TTF_RenderText_Blended(input_font, input_str, font_color);
     }
   }
 }
@@ -191,7 +191,7 @@ void show_timer_text() {
   SDL_FreeSurface(timer_text);
   char time[128];
   sprintf(time, "%d", timer_get_seconds());
-  timer_text = TTF_RenderText_Solid(input_font, time, font_color);
+  timer_text = TTF_RenderText_Blended(input_font, time, font_color);
   apply_surface(
     screen_width - timer_text->w, 0, timer_text, screen
   );
@@ -208,7 +208,7 @@ void output_scores() {
     sprintf(output, "%d. %ls, %d Punkte (%d Buchstaben in %d Sekunden)",
       i+1, score.name, score.points, score.chars, score.seconds);
 
-    highscores[i] = TTF_RenderText_Solid(font, output, font_color);
+    highscores[i] = TTF_RenderText_Blended(font, output, font_color);
     apply_surface(
       screen_width / 2 - highscores[i]->w / 2, screen_height * 0.2 + font_size * (i + 1),
       highscores[i], screen
@@ -233,7 +233,7 @@ void show_info_text(int valid_input, int do_input_name, int do_input_continue, i
       sprintf(info, "%s - keine Eingabe bisher", info);
     }
   }
-  info_text = TTF_RenderText_Solid(font, info, font_color);
+  info_text = TTF_RenderText_Blended(font, info, font_color);
   apply_surface(
     screen_width / 2 - info_text->w / 2, screen_height / 2 + 1.2 * font_size + move_y,
     info_text, screen
